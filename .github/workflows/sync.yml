@@ -1,0 +1,40 @@
+# This is a basic workflow to help you get started with Actions
+
+name: sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4,10,16,22 * * *'
+  watch:
+    types: started
+
+jobs:
+  repo-sync:
+    env:
+      PAT: ${{ secrets.PAT }}
+      dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+    
+    - name: sync-lxk0301-scripts
+      uses: repo-sync/github-sync@v2
+      if: env.PAT
+      with:
+        source_repo: "https://github.com/lxk0301/scripts.git"
+        source_branch: "master"
+        destination_branch: "lxk0301"
+        github_token: ${{ secrets.PAT }}
+
+    - name: sync github to gitee
+      uses: Yikun/hub-mirror-action@master
+      if: env.dst_key
+      with:
+          src: github/lxk0301
+          dst: gitee/lxk0301
+          static_list: "scripts"
+          dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
+          dst_token: ${{ secrets.GITEE_TOKEN }}
